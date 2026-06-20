@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crypto Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue:#0052ff;--blue-soft:#e8efff;
+    --bg:#ffffff;--bg2:#f5f6f8;--card:#ffffff;--border:#eaecf0;--border2:#f0f1f4;
+    --text:#0a0b0d;--text2:#5b616e;--text3:#8a919e;
+    --green:#018d59;--green-bg:#e6f5ee;--red:#cf202f;--red-bg:#fbeaec;
+    --shadow:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg2);color:var(--text);font-family:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;font-feature-settings:"tnum"}
+  .wrap{max-width:640px;margin:0 auto;padding:0 0 80px;background:var(--bg);min-height:100vh;box-shadow:0 0 60px rgba(16,24,40,.04)}
+
+  header{padding:26px 18px 14px}
+  .htop{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+  h1{font-size:26px;font-weight:700;letter-spacing:-.02em}
+  .hsub{color:var(--text2);font-size:13px;margin-top:3px}
+  .refresh{font-size:11px;font-weight:600;color:var(--blue);background:var(--blue-soft);padding:7px 12px;border-radius:20px;white-space:nowrap}
+
+  .market{display:flex;margin:16px 18px 4px;background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+  .market .cell{flex:1;padding:13px 12px;text-align:center;border-right:1px solid var(--border2)}
+  .market .cell:last-child{border-right:none}
+  .market .cell .l{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+  .market .cell .v{font-size:16px;font-weight:700;margin-top:3px}
+  .market .cell .v.dn{color:var(--red)}
+  .mbanner{margin:10px 18px 0;background:var(--red-bg);border-radius:12px;padding:11px 14px;font-size:12.5px;color:#7a1620}
+  .mbanner b{font-weight:700}
+
+  nav{display:flex;gap:7px;padding:16px 18px 8px;overflow-x:auto;position:sticky;top:0;background:var(--bg);z-index:20;-webkit-overflow-scrolling:touch}
+  nav::-webkit-scrollbar{display:none}
+  .tab{font-size:13px;font-weight:600;color:var(--text2);background:var(--bg2);border:none;padding:9px 15px;border-radius:22px;cursor:pointer;white-space:nowrap;transition:all .15s}
+  .tab:hover{background:#eceef1}
+  .tab.active{background:var(--text);color:#fff}
+  .tab .ct{opacity:.5;margin-left:5px;font-weight:500}
+  .tab.active .ct{opacity:.7}
+
+  .listhead{display:flex;justify-content:space-between;padding:14px 18px 6px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em}
+
+  .row{display:flex;align-items:center;gap:13px;padding:13px 18px;cursor:pointer;border-bottom:1px solid var(--border2);transition:background .12s}
+  .row:hover{background:var(--bg2)}
+  .av{width:40px;height:40px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;letter-spacing:-.02em}
+  .rinfo{flex:1;min-width:0}
+  .rname{font-weight:600;font-size:15px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .rtag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 7px;border-radius:10px}
+  .rtag.t1{background:var(--green-bg);color:var(--green)}
+  .rtag.t2{background:#fff4e5;color:#b26b00}
+  .rtag.t3{background:#f3edfb;color:#7a4fcc}
+  .rtag.watch{background:#eef0f2;color:#6b727e}
+  .rticker{font-size:12.5px;color:var(--text3);margin-top:1px}
+  .rright{text-align:right;flex-shrink:0}
+  .rprice{font-weight:600;font-size:15px}
+  .rchg{font-size:12.5px;font-weight:600;margin-top:2px;display:inline-block;padding:1px 7px;border-radius:8px}
+  .rchg.up{color:var(--green);background:var(--green-bg)}
+  .rchg.dn{color:var(--red);background:var(--red-bg)}
+  .rchg.flat{color:var(--text2);background:var(--bg2)}
+  .chev{color:var(--text3);font-size:12px;transition:transform .2s;width:12px;text-align:center}
+  .row.open .chev{transform:rotate(90deg)}
+
+  .detail{display:none;padding:4px 18px 22px;background:var(--bg2);border-bottom:1px solid var(--border2);animation:fade .25s ease}
+  .detail.open{display:block}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .one{font-size:14px;color:var(--text);font-style:italic;padding:14px 0 12px}
+  .simple{background:var(--blue-soft);border-radius:10px;padding:11px 13px;margin-bottom:13px;font-size:13px;color:var(--text);line-height:1.5}
+  .simple .sl{display:block;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--blue);margin-bottom:3px}
+  .dstats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+  .dstats .s{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px}
+  .dstats .s .l{font-size:9.5px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+  .dstats .s .v{font-size:15px;font-weight:700;margin-top:3px;letter-spacing:-.01em}
+  .dstats .s .v.dn{color:var(--red)}.dstats .s .v.up{color:var(--green)}
+  .dsec{margin-bottom:13px}
+  .dsec .h{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+  .dsec p{font-size:13.5px;color:var(--text);line-height:1.55}
+  .dsec p b{font-weight:600}
+  .er{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:13px}
+  @media(max-width:540px){.er{grid-template-columns:1fr}.dstats{grid-template-columns:repeat(2,1fr)}}
+  .er .box{border-radius:12px;padding:11px 13px}
+  .er .edge{background:var(--green-bg)}
+  .er .risk{background:var(--red-bg)}
+  .er .box .h{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+  .er .edge .h{color:var(--green)}.er .risk .h{color:var(--red)}
+  .er .box p{font-size:12.5px;line-height:1.5;color:var(--text)}
+  .buys{display:flex;gap:6px;flex-wrap:wrap}
+  .buys .ex{font-size:11px;font-weight:500;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:5px 11px;color:var(--text2)}
+
+  .lenswrap{padding:6px 18px 0}
+  .lcard{background:var(--text);color:#fff;border-radius:18px;padding:22px;margin-top:8px}
+  .lcard h2{font-size:19px;font-weight:700;margin-bottom:10px}
+  .lcard p{font-size:13.5px;color:#c9cdd6;margin-bottom:11px;line-height:1.6}
+  .lcard p strong{color:#fff;font-weight:600}
+  .lcard .b{color:#7aa2ff;font-weight:600}
+  .lh{font-size:13px;font-weight:700;color:var(--text);margin:22px 0 4px}
+  ul.chk{list-style:none}
+  ul.chk li{padding:11px 0 11px 26px;position:relative;font-size:13.5px;border-bottom:1px solid var(--border2);color:var(--text)}
+  ul.chk li:last-child{border-bottom:none}
+  ul.chk li::before{content:"";position:absolute;left:2px;top:15px;width:14px;height:14px;border-radius:50%;background:var(--blue-soft)}
+  ul.chk li::after{content:"✓";position:absolute;left:5px;top:11px;color:var(--blue);font-size:9px;font-weight:800}
+  ul.chk li b{font-weight:600}
+  .note{font-size:11px;color:var(--text3);line-height:1.6;padding:20px 18px 8px;border-top:1px solid var(--border2);margin-top:18px}
+
+  .refresh{background:#0052ff;color:#fff;border:none;border-radius:20px;
+  padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.02em}
+.refresh:active{opacity:.8}
+.row.owned{border-left:3px solid #018d59;background:#f8fffe}
+.row.owned .av{position:relative}
+.owndot{position:absolute;bottom:-3px;right:-3px;width:13px;height:13px;
+  background:#018d59;border:2px solid #fff;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:7px;color:#fff;font-weight:900;line-height:1}
+.ownrow{padding:10px 0 2px}
+.own-btn{width:100%;padding:10px 0;border-radius:20px;font-size:13px;
+  font-weight:600;cursor:pointer;border:1.5px solid #018d59;
+  color:#018d59;background:#fff;transition:all .15s}
+.own-btn.active{background:#018d59;color:#fff}
+.panel{display:none}
+  .panel.active{display:block}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="htop">
+      <div>
+        <h1>Watchlist</h1>
+        <div class="hsub">All research · 21 assets · <span id="liveStatus" style="color:#3b82f6">loading prices…</span></div>
+      </div>
+      <button class="refresh" id="refreshBtn" onclick="doRefresh()" title="Refresh live prices">↻ Live</button>
+    </div>
+  </header>
+
+  <div class="market">
+    <div class="cell"><div class="l">BTC</div><div class="v dn" id="btcCell">~$62.2K</div></div>
+    <div class="cell"><div class="l">Total mcap</div><div class="v dn">~$2.1T</div></div>
+    <div class="cell"><div class="l">Dow corr</div><div class="v">84%</div></div>
+    <div class="cell"><div class="l">Sentiment</div><div class="v dn">F&G 12</div></div>
+  </div>
+  <div class="mbanner">⚠ <b>Macro shock (Jun 19).</b> BTC dropped to ~<b>$62,200</b> (−3%) after Israel launched overnight airstrikes on Lebanon, causing Iran to pull its delegation from the US–Iran peace signing at Bürgenstock, Switzerland — postponed indefinitely. The single macro tailwind the market was counting on is now off the table. <b>F&amp;G: 15 (Extreme Fear).</b> Total market cap slid to ~$2.1T. XRP worst performer among majors (−4.6% to $1.12). CLARITY Act timeline unaffected — White House Jul 4 signing target stands.</div>
+
+  <nav id="nav">
+    <button class="tab active" data-f="all">All <span class="ct">21</span></button>
+    <button class="tab" data-f="rwa">RWA <span class="ct">8</span></button>
+    <button class="tab" data-f="defi">DeFi <span class="ct">2</span></button>
+    <button class="tab" data-f="ai">AI <span class="ct">5</span></button>
+    <button class="tab" data-f="l1">L1s <span class="ct">2</span></button>
+    <button class="tab" data-f="gaming">Gaming <span class="ct">3</span></button>
+    <button class="tab" id="holdings-tab" data-f="holdings">Holdings <span class="ct">0</span></button>
+    <button class="tab" data-f="lens">Lens</button>
+  </nav>
+
+  <div class="panel active" id="coinpanel">
+    <div class="listhead"><span>Asset</span><span>Price · 24h</span></div>
+    <div id="list"></div>
+  </div>
+
+  <div class="panel" id="lenspanel">
+    <div class="lenswrap">
+      <div class="lcard">
+        <h2>How I'd hold the board</h2>
+        <p><strong>The core:</strong> one true revenue flywheel (<span class="b">HYPE</span>), a lower-variance infra anchor (<span class="b">LINK</span>), and a credible smaller burn play (<span class="b">INJ</span>).</p>
+        <p><strong>Catalyst-gated Tier-2:</strong> <span class="b">XRP, XLM, HBAR, CC, AKT, TAO, FLR, KAS</span> — each has a real, nameable trigger but more variance.</p>
+        <p><strong>Higher uncertainty:</strong> <span class="b">FET, ONDO, XDC, ZBCN</span> — strong stories, real overhangs (rebrands, unlocks, liquidity, micro-cap risk).</p>
+        <p><strong>Watchlist only:</strong> <span class="b">IO, CHIP, ZEC</span> — structural issues, brand-new, or a pump unwinding.</p>
+        <p><strong>Gaming (separate tab):</strong> <span class="b">GMT, ATLAS, AURY</span> — tracked for the sector, not core holdings. All ~99% from ATH, near-zero liquidity on ATLAS/AURY. GMT is the only one with a working burn loop. Treat as lottery-ticket sizing only.</p>
+        <p><strong>The discipline:</strong> separate a catalyst's durability from the short-term price move. On an 84%-Dow day everything drops together — that's when structural names separate from momentum pumps. Your through-line is rewarding real revenue + working value-accrual (HYPE buybacks, INJ/AKT burns) over pure narrative.</p>
+      </div>
+
+      <div class="lh">Verify-before-acting checklist</div>
+      <ul class="chk">
+        <li><b>Live price/supply</b> — figures span aggregator disagreement (TAO, AKT, HYPE, KAS especially); confirm on CoinGecko/CoinMarketCap before acting.</li>
+        <li><b>ETF status</b> (INJ, FLR, HBAR, HYPE) — filing vs. approval changes each thesis.</li>
+        <li><b>Value-accrual gaps</b> — HBAR fees skip holders; CC\u2019s network value may not flow to the token; KAS has no accrual beyond scarcity; confirm before treating any as a "yield" asset.</li>
+        <li><b>Burn-vs-emission</b> (AKT, IO, INJ, FLR) — the flywheel only works when burns outpace new supply.</li>
+        <li><b>Unlock calendars</b> (ONDO to 2029, IO to 2027–28, CHIP 80% still locked, XDC ongoing) — persistent dilution.</li>
+        <li><b>Protocol events</b> — Kaspa's Toccata fork + FET→ASI rebrand can move price on headlines.</li>
+        <li><b>Macro catalysts</b> — the CLARITY Act hit the Senate calendar (Jun 1), a tailwind for utility tokens; watch the "decoupling" thesis (XLM, HBAR, LINK trading on real usage vs. crypto beta).</li>
+        <li><b>The macro</b> — on high Dow-correlation days these track equities, not their own news.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="note">
+    Not investment advice. Compiled from public sources (CoinGecko, CoinMarketCap, Coinbase, CoinDesk, Messari, Phemex/KuCoin academies, project materials) with prices last manually verified June 19, 2026. Live prices auto-load from CoinGecko on page open. 24h moves and prices are approximate snapshots that vary by aggregator and move fast — ranges shown where sources disagree. Crypto is highly volatile; you can lose your entire position. Do your own research and size to risk. Send "crypto update" to regenerate with fresh data.
+  </div>
+</div>
+
+<script>
+const NAR_COLOR={rwa:'#0052ff',defi:'#7a4fcc',ai:'#00a3a3',l1:'#e8833a',watch:'#8a919e',gaming:'#d4500a'};
+const TIER_LABEL={t1:'Core',t2:'Catalyst',t3:'High-var',watch:'Watch'};
+
+const SIMPLE={
+ HYPE:'A crypto exchange for advanced (leverage) trading that runs on its own blockchain, and uses most of its profits to buy back its own coin.',
+ LINK:'The plumbing that feeds real-world info (like prices) into blockchains and lets different blockchains talk to each other.',
+ INJ:'A blockchain built specifically for finance apps, with the same profit-buyback idea as Hyperliquid, just smaller.',
+ XRP:'A coin made to send money across borders fast and cheap \u2014 a faster, cheaper alternative to a bank wire.',
+ CC:'A private blockchain built for big banks to move stocks and bonds behind the scenes \u2014 the settlement system Wall Street is testing.',
+ XLM:'Cheap, fast cross-border payments and issuing digital dollars/euros. Shares a founder with XRP.',
+ HBAR:'A very fast, ultra-cheap network run by a club of big companies (Google, IBM, Boeing) for business uses like payments and tracking things.',
+ XDC:'A blockchain focused on trade finance \u2014 the invoices and payments behind global shipping and trade.',
+ ONDO:'Puts safe, boring assets like US Treasury bonds and stocks on-chain so you can hold them in crypto form.',
+ ZBCN:'Payroll and payments on crypto \u2014 getting paid in real time (money streaming by the second), plus a crypto debit card.',
+ TAO:'An open network that pays people for contributing AI models and computing, instead of one big company owning it all.',
+ AKT:'Airbnb for computers \u2014 people rent out spare GPU/computing power cheaply to others who need it (often for AI).',
+ FET:'Building AI agents \u2014 little software bots that do tasks and pay each other automatically.',
+ IO:'Same idea as Akash (renting out GPU power for AI), but on the Solana network and a riskier bet.',
+ CHIP:'A brand-new lending service that funds AI companies buying GPUs, using the hardware as collateral. CHIP is its voting coin \u2014 not the dollar in the name.',
+ KAS:'A very fast, Bitcoin-style digital money that is mined with no company behind it. Right now it is just money; soon it adds apps.',
+ FLR:'A blockchain whose whole job is to let XRP (and later Bitcoin) holders actually use their coins to earn, instead of sitting idle.',
+ ZEC:'Digital cash like Bitcoin, but with the option to hide who paid whom.',
+ GMT:'The walk-to-earn app — buy NFT sneakers, go for a run, earn tokens. The tokens get burned when people upgrade, which is what gives GMT some value.',
+ ATLAS:'A massive space game being built in Unreal Engine 5 where you own ships and fight for territory. Most impressive vision on Solana — nearly worthless token today.',
+ AURY:'A creature-battle RPG (think Pokémon meets crypto) on the Epic Games Store. Genuinely good game, near-dead token with almost no trading volume.'
+};
+
+const coins=[
+ {t:'HYPE',n:'Hyperliquid',nar:'defi',tier:'t1',price:'$58–60',chg:2,mcap:'$13.4B',rank:'#10',ath:'−20%',founded:'2024',
+  one:'A top-10 perp-DEX L1 with the most aggressive revenue flywheel in crypto. It set a new ATH ($75.51) on June 2, then pulled back on a big token unlock.',
+  founder:'Jeff Yan — an 11-person team with zero VC backing; ~$800M–$1B annualized revenue.',
+  cat:'~97% of fees recycled into HYPE buybacks. SpaceX IPO (Jun 12) drove SPCX perp volume to $1.2B/day on Hyperliquid — proof-of-price-discovery at institutional scale. AQA v2 governance vote redirects USDC reserve yield into buybacks.',
+  tok:'Native perps L1 + HyperEVM. ~26–27% of ~954M supply circulating — ~74% still locked.',
+  edge:'The cleanest revenue→token flywheel in crypto, backed by genuine usage. Unlike most of this board, it is near highs, not −80%.',
+  risk:'~74% supply still locked; centralization concerns exposed by the JELLY exploit; flywheel reverses if volume contracts; a $700M unlock (Jun 6) and Arthur Hayes exiting his position drove the ~18% drop from the ATH.',
+  buys:['Coinbase','Hyperliquid (native)','Binance','Bybit']},
+
+ {t:'LINK',n:'Chainlink',nar:'rwa',tier:'t1',price:'$7.6–7.7',chg:-1,mcap:'~$5.6B',rank:'#20',ath:'−85%',founded:'2017',
+  one:'The incumbent oracle/interoperability layer — becoming the data backbone for TradFi moving on-chain.',
+  founder:'Sergey Nazarov (co-founder, long-tenured and public).',
+  cat:'The DTCC — which settles trillions — is adopting Chainlink\u2019s Runtime Environment + data standards (targeted Q4 2026). Runs a working fee model converting revenue into a strategic LINK reserve. New (Jun): Kalshi filed for LINK perp futures (CFTC).',
+  tok:'LINK pays for oracle services; reserve mechanism accrues value from network revenue.',
+  edge:'Working revenue→token flywheel + unmatched institutional integration. Lower-variance way to own the RWA theme.',
+  risk:'At $6.4B it needs to become core global plumbing to justify bull targets; a quant model read was bearish near-term.',
+  buys:['Coinbase','Binance','Kraken','all majors']},
+
+ {t:'CC',n:'Canton',nar:'rwa',tier:'t2',price:'$0.160–0.163',chg:0,mcap:'$6.27B',rank:'#19',ath:'−17%',founded:'2023',
+  one:'An institutional, privacy-first L1 for tokenized finance — arguably the heaviest TradFi adoption on the board, with a real token-vs-network value question.',
+  founder:'Built by Digital Asset (creators of the Daml smart-contract language; founded 2014, CEO Yuval Rooz). Network unveiled 2023, Canton Coin live 2024. Governed by the Global Synchronizer Foundation under the Linux Foundation.',
+  cat:'DTCC plans to tokenize US Treasuries on Canton (H2 2026); Visa, Goldman, HSBC, JPMorgan as Super Validators. New (Jun): Grayscale filed a spot Canton ETF (S-1, Jun 5) and Mastercard integrated Canton for stablecoin settlement (Jun 3) — two major institutional signals in one week.',
+  tok:'No pre-mine/pre-sale — CC is earned for network utility. ~100B minable over 10 years, then 2.5B/yr; burn-and-mint equilibrium (usage fees burn CC). CIP-0116 now requires apps to lock 5–25M CC (new locked/illiquid supply); "liveness rewards" ended, tying issuance to real activity.',
+  edge:'The deepest institutional adoption of any name here (Goldman, Visa, HSBC, JPMorgan, DTCC, Franklin Templeton) + privacy-preserving design built for regulated finance. Very low correlation to BTC/ETH — held ~flat in a −15% week, decoupled from the macro tape.',
+  risk:'Core bear case: "valuable network, maybe not a valuable token" — institutions may use Canton without creating proportional CC demand. The flip side of its stability: a ~$6B cap on single-digit-millions daily volume means resilience is partly just illiquidity, not conviction. Burn-mint untested at scale.',
+  buys:['Bybit','OKX','Gate','21Shares TCAN ETF','(also earned via network)']},
+
+ {t:'INJ',n:'Injective',nar:'defi',tier:'t1',price:'~$4.68',chg:-2,mcap:'~$285M',rank:'~#90',ath:'—',founded:'2018',
+  one:'A finance-specialized L1 with the same burn logic as HYPE, just smaller — recently added native USDC + US staking.',
+  founder:'Eric Chen (CEO) & Albert Chon (CTO, ex-Amazon/Stanford). ~8-yr track record; backed by Pantera, Jump, Mark Cuban.',
+  cat:'Native USDC via Circle CCTP; INJ staking on Binance US; a 21Shares spot ETF filing with the SEC.',
+  tok:'IIP-617 doubled the deflation rate; on-chain revenue funds monthly buyback-and-burn. ~58% staked → thin float.',
+  edge:'Credible long-tenured team + a genuine deflationary burn tied to revenue; thin float amplifies upside.',
+  risk:'Ran hottest (RSI ~75 at the top, −17% on the day); ETF is a filing; competes directly with HYPE, which leads on revenue.',
+  buys:['Binance US (staking)','Coinbase','Kraken','KuCoin']},
+
+ {t:'XLM',n:'Stellar',nar:'rwa',tier:'t2',price:'$0.18–0.20',chg:-1,mcap:'$6.5B',rank:'#15',ath:'−80%',founded:'2014',
+  one:'A 2014 payments/asset-issuance chain that just became a DTCC-selected tokenization rail.',
+  founder:'Jed McCaleb (also co-founded Ripple & Mt. Gox) + Joyce Kim, via the nonprofit SDF.',
+  cat:'DTCC connecting tokenized securities to Stellar (2027 target); RWA transfer volume +317% in 30 days; EURAU euro stablecoin live. New (Jun): Kalshi filed for XLM perp futures (CFTC).',
+  tok:'Fixed 50B supply (~34B circulating), inflation disabled — no burn flywheel; value rests on settlement demand.',
+  edge:'Real institutional validation + on-chain usage growth; deep TradFi roster (Franklin Templeton, MoneyGram).',
+  risk:'Its own history: big partnerships failed to sustain rallies (closed 2025 −56%). DTCC payoff is 2027. Already retraced ~⅓.',
+  buys:['Coinbase','Binance','Kraken','all majors']},
+
+ {t:'XRP',n:'XRP',nar:'rwa',tier:'t2',price:'$1.12',chg:-4,mcap:'~$70B',rank:'#5',ath:'−33% YTD',founded:'2012',
+  one:'The original cross-border-payments asset — now with a commodity classification, live spot ETFs, and the CLARITY Act as its swing catalyst. (Also the asset Flare\u2019s XRPFi thesis is built on.)',
+  founder:'XRP Ledger / Ripple founded 2012 by Chris Larsen, Jed McCaleb (the same McCaleb who later founded Stellar) and Arthur Britto. Ripple CEO Brad Garlinghouse; CTO David Schwartz.',
+  cat:'SEC + CFTC jointly classified XRP a commodity (Mar 2026); spot XRP ETFs live with ~$1.4–1.5B inflows (May record ~$132M). CLARITY Act cleared the Senate Banking Committee (May 14) — a floor vote would formally make XRP a CFTC digital commodity (~62% Polymarket odds for 2026). Wildcards: Ripple\u2019s pending Fed master-account bid + planned IPO.',
+  tok:'~100B pre-mined max (no mining); ~59–60B circulating. Ripple releases escrowed XRP monthly — persistent supply pressure. XRPL roadmap pushing into tokenized assets (securities, money-market funds, repos).',
+  edge:'Three things have never aligned before: commodity classification, spot-ETF access, and active US legislation. Deep liquidity, real payments use (3–5 sec, <1¢), 5th-largest asset — a relatively lower-variance way to play regulatory clarity.',
+  risk:'Down ~29% YTD; range-bound and technically weak. Monthly escrow unlocks add steady supply. Value-accrual debate — critics argue XRP holders don\u2019t directly benefit from Ripple\u2019s success. CLARITY passage isn\u2019t guaranteed (~38% stall odds).',
+  buys:['Coinbase','Binance','Kraken','spot XRP ETFs','all majors']},
+
+ {t:'HBAR',n:'Hedera',nar:'rwa',tier:'t2',price:'$0.078–0.082',chg:-1,mcap:'~$3.4B',rank:'#25',ath:'−84%',founded:'2018',
+  one:'An enterprise-grade hashgraph network governed by a council of global corporations — strong utility, a real token catch.',
+  founder:'Dr. Leemon Baird (hashgraph inventor) & Mance Harmon, via Swirlds. Council includes Google, IBM, Boeing, Deutsche Telekom, LG, Tata — FedEx joined Feb 2026.',
+  cat:'Deep enterprise/RWA adoption (2,400+ TPS, fixed $0.0001 fees); Canary HBAR ETF (HBR) live on Nasdaq + ~15 more filings; carbon-negative status draws ESG allocators. New (Jun): Merck launched Hedera-based product passport for EU supply-chain compliance (Jun 9); HBAR regulated perp futures under CFTC review (Jun 10); Hashdex added HBAR to its Nasdaq crypto ETF. Analysts flag HBAR for alt-rotation as capital rotates from BTC.',
+  tok:'aBFT hashgraph (not a blockchain), carbon-negative PoS. 50B fixed max, ~43B circulating on a ~15-yr release; council/treasury-controlled.',
+  edge:'Unmatched enterprise governance + real utility (RWA, carbon credits, supply chain); predictable fees; growing ETF access.',
+  risk:'Value-accrual gap — fees flow to node operators/treasury, NOT holders, so big RWA volume hasn\u2019t directly rewarded HBAR. Large supply still releasing; enterprises may bypass the token via prepaid accounts.',
+  buys:['Coinbase','Binance','Kraken','KuCoin']},
+
+ {t:'XDC',n:'XDC Network',nar:'rwa',tier:'t3',price:'$0.029–0.033',chg:-1,mcap:'$590–660M',rank:'~#95',ath:'−84%',founded:'2019',
+  one:'A focused trade-finance L1 with real institutional document/settlement integrations — a niche RWA play.',
+  founder:'Atul Khekade & Ritesh Kakkad, via XinFin (org founded 2017); mainnet June 2019.',
+  cat:'First compliant US Treasury token (USTY, via Tradeteq/Securitize); SBI Holdings JV (TradeFinex); ISO20022-compliant; Singapore\u2019s TradeTrust uses it. XDC 2.0 (HotStuff BFT) brought ~6-sec finality.',
+  tok:'EVM-compatible hybrid (public + private subnets) on Delegated PoS (XDPoS). 38B max / ~20B circulating; near-zero fees.',
+  edge:'A real-world trade-finance niche with actual institutional integrations (ISO20022, MLETR doc standards) rather than generic L1 ambitions.',
+  risk:'Small/illiquid (thin volume); supply concentration (top-10 holders ~40%); −83% from 2021 ATH; competes with bigger RWA names for the same attention.',
+  buys:['Bitget','Kraken','KuCoin','Gate','LBank']},
+
+ {t:'ONDO',n:'Ondo',nar:'rwa',tier:'t3',price:'$0.37',chg:1,mcap:'$1.79B',rank:'~#45',ath:'−83%',founded:'2021',
+  one:'The purest equity-style proxy on institutional RWA — executing well, with a real token overhang.',
+  founder:'Nathan Allman (died unexpectedly May 2026) & Pinku Surana; president Ian De Bode is now CEO.',
+  cat:'$1B+ tokenized-stock TVL in 8 months; bridging to Hyperliquid\u2019s HyperEVM; joined the DTCC consortium.',
+  tok:'5-year linear unlock — ~6B ONDO still releasing through 2029.',
+  edge:'Best-positioned pure-play on the institutional RWA narrative, with concrete TVL and partnerships.',
+  risk:'Persistent unlock dilution through 2029; whale activity into rising exchange supply flags distribution; leadership transition.',
+  buys:['Coinbase','Binance','Kraken']},
+
+ {t:'ZBCN',n:'Zebec',nar:'rwa',tier:'t3',price:'$0.0027',chg:1,mcap:'~$270M',rank:'~#130',ath:'−58%',founded:'2021',
+  one:'A Solana-based PayFi network — payroll, cards, and real-time payment "money streams" — now fully circulating and revenue-deflationary.',
+  founder:'Founded 2021 (mainnet March 2022); ~$35M raised from Circle, Coinbase, Solana Ventures, Breyer, Republic, Lightspeed.',
+  cat:'Member of the NACHA Payments Innovation Alliance (the $85T US ACH network, alongside JP Morgan); named Stellar\u2019s global stablecoin payroll provider; SuperApp Mobile (payroll + card + staking) launching Q2 2026.',
+  tok:'100B total — final unlock completed March 2026, so ~100% circulating (no more vesting dilution). Shifted to a deflationary model: product revenue (payroll, card fees) funds buyback-and-burn.',
+  edge:'Real institutional payment rails (NACHA membership is rare) + a now fully-circulating, revenue-funded burn model — the value-accrual setup you favor, in a PayFi wrapper.',
+  risk:'Micro-cap and speculative; −58% from ATH; deflation only works if SuperApp revenue actually scales; Solana-dependent; narrative-sensitive.',
+  buys:['Coinbase','KuCoin','Bybit','OKX','Gate','Crypto.com']},
+
+ {t:'TAO',n:'Bittensor',nar:'ai',tier:'t2',price:'$200–210',chg:-3,mcap:'$2.0–2.3B',rank:'#34',ath:'−72%',founded:'2021',
+  one:'The closest thing to a blue chip in decentralized AI — a network paying TAO for compute and model contributions.',
+  founder:'Opentensor Foundation (Jacob Steeves & Ala Shaabana).',
+  cat:'Protocol-layer bet on decentralized AI (vs. AKT/IO\u2019s raw GPU marketplaces); subnet ecosystem growth.',
+  tok:'Bitcoin-style capped emission model with halvings; rewards flow to subnet contributors.',
+  edge:'The category\u2019s blue chip; ties the whole AI-compute thesis together at the protocol layer.',
+  risk:'High-beta and technically weak on the week; aggregator price disagreement was wide ($227–450) — verify. A watch, not a chase, until the AI sector turns.',
+  buys:['Coinbase','Binance','Kraken']},
+
+ {t:'AKT',n:'Akash',nar:'ai',tier:'t2',price:'$0.60–0.65',chg:-2,mcap:'~$178M',rank:'~#186',ath:'−92%',founded:'2018',
+  one:'A decentralized GPU/cloud marketplace — the structurally cleaner of the two compute plays, founder-led for 8 years.',
+  founder:'Greg Osuri (Overclock Labs) — still leading after ~8 years (rare continuity).',
+  cat:'AkashML live; Greg Osuri on AI Compute panel (Jun 2). Messari Q1 2026: leases +27% but revenue −45% — shift to lower-revenue workloads. BME burned 53,520 AKT in Q1; burn-to-emission ratio is the key number.',
+  tok:'BME (Burn-Mint Equilibrium) burn mechanics, zero unlock overhang. Key metric: BTE (burn-to-emission) ratio — >50% makes AKT meaningfully deflationary.',
+  edge:'No unlock overhang, real burn mechanics, long-tenured founder, 8-yr track record. The clean version of the DePIN bet.',
+  risk:'Small cap; intense competition (IO, Render, Aethir, Nosana + hyperscalers); flywheel only spins if burns exceed emissions.',
+  buys:['Coinbase','Kraken','Binance','Osmosis']},
+
+ {t:'FET',n:'Fetch.ai / ASI',nar:'ai',tier:'t3',price:'$0.20–0.21',chg:2,mcap:'~$380–480M',rank:'~#100',ath:'−94%',founded:'2017',
+  one:'A 2017 Cambridge AI-agent project, now anchor of the ASI Alliance — real pedigree, complicated structure.',
+  founder:'Humayun Sheikh — a founding investor in DeepMind — with Toby Simpson & Thomas Hain.',
+  cat:'Agent Launchpad / ASI:Create; ASI:Chain (mainnet late \u201926/\u201927); "Earn & Burn" (~$30M buybacks reported).',
+  tok:'~83% of supply already circulating (low future dilution). ASI Alliance = Fetch.ai + SingularityNET; Ocean WITHDREW Oct 2025; FET→ASI rebrand still pending.',
+  edge:'Genuine early-AI pedigree, ~83% circulating, cleanest standing AI-crypto thesis if agents become real.',
+  risk:'Highest beta; −93% from ATH; withdrawn partner, pending rebrand, roadmap proof 6–18mo out; competes with Big Tech.',
+  buys:['Coinbase','Binance','Kraken','KuCoin']},
+
+ {t:'KAS',n:'Kaspa',nar:'l1',tier:'t2',price:'$0.031',chg:-2,mcap:'~$840M',rank:'~#70',ath:'−84%',founded:'2021',
+  one:'The fastest proof-of-work network — a fair-launch "digital money" play now adding programmability.',
+  founder:'Yonatan Sompolinsky — Harvard CS postdoc whose 2013 GHOST paper is cited in the Ethereum whitepaper. Community/open-source; initial R&D via DAGLabs (dissolved after mainnet).',
+  cat:'Toccata hard fork (June 2026) introduces native tokens + programmability — a potential developer/demand catalyst. ~95% of the 28.7B max already mined, so miner sell-pressure is fading.',
+  tok:'Pure PoW via GHOSTDAG/blockDAG (10 blocks/sec, scaling toward 100). Fixed 28.7B max, emissions approaching zero by end-2026. Fair launch — no premine/VC allocation.',
+  edge:'Fastest PoW network with a fair-launch, near-fully-distributed supply; programmability via Toccata could re-rate it from "fast money" to a smart-contract L1.',
+  risk:'−85% from ATH; no native value-accrual beyond scarcity; smart-contract ecosystem unproven until Toccata lands; range-bound in a Fear market.',
+  buys:['Bitget','Kraken','KuCoin','Coinbase','(GPU-mineable)']},
+
+ {t:'FLR',n:'Flare',nar:'l1',tier:'t2',price:'$0.0077–0.008',chg:1,mcap:'~$600M',rank:'#73',ath:'−91%',founded:'2023',
+  one:'An EVM L1 unlocking dormant XRP (then BTC) into DeFi via FAssets — has its own dedicated deep-dive dashboard.',
+  founder:'Hugo Philion (CEO) with Sean Rowan & Nairi Usher.',
+  cat:'FIP.16 executed (Apr 24): cuts annual inflation 5%→3%, introduces FIRE revenue system. FXRP expanding to Cardano via LayerZero (Jun 10). FBTC still TBC. Teucrium ETF filing live.',
+  tok:'FAssets mints overcollateralized FXRP on an EVM chain; FIP.16 shifts FLR toward activity-linked deflation. ~$220M FXRP TVL.',
+  edge:'Asymmetric — small cap with real room if XRPFi works; dated, verifiable catalysts not yet priced in.',
+  risk:'Highest-variance of the L1s; small TVL, growth hasn\u2019t moved price; competes with Chainlink in oracles. Burn/FBTC must execute.',
+  buys:['Coinbase','Kraken','Binance','→ see FLR dashboard']},
+
+ {t:'IO',n:'IO.NET',nar:'ai',tier:'watch',price:'$0.13–0.14',chg:-5,mcap:'$46–50M',rank:'~#400',ath:'−98%',founded:'2024',
+  one:'A Solana-based DePIN GPU network — compelling revenue ratio, but structural trust and supply issues keep it watchlist-tier.',
+  founder:'Original founder departed under controversy at launch; new CEO Tory Green.',
+  cat:'Low market cap vs. real GPU revenue (compelling price-to-sales). Trigger to watch: burn revenue exceeding emission value. Next unlock ~June 11.',
+  tok:'IO pays for/earns GPU compute. Monthly unlocks through 2027–28 (~330–350M of 800M circulating).',
+  edge:'Cheapest revenue-to-cap ratio of the compute names; deeply beaten down, real GPU usage.',
+  risk:'Monthly unlocks through 2027–28; a founder who left under controversy at launch; a past fake-GPU incident that hurt trust.',
+  buys:['Binance','Coinbase','MEXC']},
+
+ {t:'CHIP',n:'USD.AI',nar:'ai',tier:'watch',price:'$0.030–0.035',chg:-3,mcap:'~$60M',rank:'~#350',ath:'−76%',founded:'2026',
+  one:'A brand-new GPU-financing protocol — it lends against AI hardware and pays real loan-interest yield. CHIP is its governance token (not the dollar in the name).',
+  founder:'Built by Permian Labs; backed by Framework Ventures, Dragonfly, Coinbase Ventures (~$38M raised). Token launched April 21, 2026 — only ~7 weeks old.',
+  cat:'Real traction for a new protocol: ~$283M TVL, $61M active loans, a ~$1.5B loan pipeline, and $500M facilities with Sharon AI and QumulusAI. Listed on Binance (Seed Tag), Coinbase, OKX.',
+  tok:'Two-token system: USDai (synthetic dollar, PYUSD-backed) + sUSDai (yield-bearing, ~10–15% target). CHIP governs the protocol but does NOT accrue value on its own. Only 2B of 10B circulating (20%) — a 12-month cliff then unlocks means a heavy dilution overhang.',
+  edge:'A rare AI token with real revenue (loan interest, not token emissions) — "picks and shovels" for AI-hardware financing, tied to actual GPU demand. Serious VC backing.',
+  risk:'Brand-new and richly priced (already −76% from its 7-week-old ATH); GPU-as-collateral untested through a default cycle (chips depreciate fast); big unlock overhang; Binance "Seed Tag" flags high risk; the "USD" branding is misleading — CHIP is speculative, not a stablecoin.',
+  buys:['Coinbase','Binance','OKX','Robinhood']},
+
+ {t:'ZEC',n:'Zcash',nar:'watch',tier:'watch',price:'$424–428',chg:3,mcap:'~$7.1B',rank:'#15',ath:'−86%',founded:'2016',
+  one:'The leading privacy coin – ran toward ~$640, then an Orchard privacy-pool vulnerability triggered a sharp pullback to ~$430. Extremely volatile.',
+  founder:'Zooko Wilcox, via Electric Coin Co.',
+  cat:'Privacy-coin demand drove a run toward ~$640; an Orchard shielded-pool vulnerability then triggered a sharp pullback. Still well up on the year.',
+  tok:'21M cap, BTC-style halving schedule; optional shielded (z-address) transactions via zk-SNARKs.',
+  edge:'Leading privacy coin with genuine cryptographic differentiation and a fixed, scarce supply.',
+  risk:'Wild swings (ran to ~$640, then the Orchard privacy-pool bug knocked it back). Up big on the year, but a high-volatility momentum name, not a stable hold.',
+  buys:['Coinbase','Binance','Kraken','Gemini']},
+
+ {t:'GMT',n:'STEPN',nar:'gaming',tier:'watch',price:'$0.008–0.011',chg:-3,mcap:'~$24M',rank:'~#650',ath:'−99%',founded:'2021',
+  one:'The original move-to-earn app — you walk/run with NFT sneakers and earn tokens. The least-bad of the gaming tokens with a real burn loop.',
+  founder:'Find Satoshi Lab (FSL), an Australian Web3 studio that won the 2021 Solana Ignition Hackathon. Also runs Gas Hero, MOOAR, and DOOAR.',
+  cat:'GMT is burned inside the app to mint high-quality sneakers, upgrade gems, and access governance. Real usage-driven burn — the only Solana gaming token with a working value-accrual loop. Studio is active across multiple products.',
+  tok:'6B max supply; ~3.1B circulating. GMT is burned by actual user activity inside the app. Most liquid of the three gaming tokens (~$5–15M daily volume).',
+  edge:'Only Solana gaming token with a real burn mechanism tied to usage. Most liquid, most functional product, active studio building adjacent apps.',
+  risk:'−99.8% from its $4.11 ATH; still a high-inflation microcap in a beaten sector. Move-to-earn hype is long gone — any recovery needs a new user growth catalyst.',
+  buys:['Binance','OKX','Bybit','Coinbase']},
+
+ {t:'ATLAS',n:'Star Atlas',nar:'gaming',tier:'watch',price:'~$0.000126',chg:-2,mcap:'~$2.8M',rank:'~#3500+',ath:'−99.9%',founded:'2021',
+  one:'The most ambitious space MMO being built on blockchain — stunning Unreal Engine 5 visuals, but the full game is years away and the token has nearly ceased to exist as an investment.',
+  founder:'ATMTA Inc., led by CEO Michael Wagner. Backed by serious investors but pivoting the game to its own "Zink" SVM-based chain (launched late 2025).',
+  cat:'Zink chain migration introduces ZK-powered IDs (zProfiles) and a 10% ZINK airdrop for ATLAS/POLIS holders. Fleet Commander update adding deep ship management. The game keeps shipping — the token keeps bleeding.',
+  tok:'36B max supply — a massive inflation problem. Constant emissions erode value faster than the game generates demand. Only ~$45K daily volume; deeply illiquid.',
+  edge:'The most technically impressive Web3 gaming project on Solana; long-term vision could re-rate if the game ever ships a full playable experience.',
+  risk:'Practically uninvestable as a token today: ~$2.8M cap on near-zero volume, 36B token supply with continuous emissions, and a game still years from full release. A bet on pure future optionality.',
+  buys:['Coinbase','Raydium (DEX)','(thin liquidity — verify depth)']},
+
+ {t:'AURY',n:'Aurory',nar:'gaming',tier:'watch',price:'$0.02–0.04',chg:-3,mcap:'~$2M',rank:'~#2500+',ath:'−99.9%',founded:'2021',
+  one:'The best actual game on Solana — polished creature-battle RPG on Epic Games Store — but the token is near-dead with under $1K in daily trading volume.',
+  founder:'Aurory studio, ~70-person team with many from AAA game studios. On Epic Games Store since 2023. Backed by Animoca Brands and DWF Labs.',
+  cat:'Active PvE/PvP development, new content drops. One of the few Solana games with genuine gameplay (not just token farming). Expanded to a "universe of interoperable Web3 games."',
+  tok:'100M max supply, ~75M circulating. Main trading pair does under $1,000 of daily volume on Orca — dangerously illiquid. You could not exit a meaningful position without moving the price.',
+  edge:'Best game quality of the three; most likely to attract mainstream players if Web3 gaming has a second act; AAA team pedigree.',
+  risk:'Essentially uninvestable at current liquidity: ~$2M cap, under $1K daily volume, ~99.9% below ATH. Good game ≠ good token. Aggregators disagree widely on price — verify before acting.',
+  buys:['Orca (DEX only)','(verify liquidity first — very thin)']},
+];
+
+// Owned portfolio system
+const OWNED_KEY='owned_v1';
+let OWNED=new Set(JSON.parse(localStorage.getItem(OWNED_KEY)||'[]'));
+let currentFilter='all';
+function toggleOwned(t){
+  if(OWNED.has(t))OWNED.delete(t);else OWNED.add(t);
+  localStorage.setItem(OWNED_KEY,JSON.stringify([...OWNED]));
+  const ht=document.getElementById('holdings-tab');
+  if(ht)ht.querySelector('.ct').textContent=OWNED.size;
+  render(currentFilter);
+}
+function chgClass(c){return c>0.2?'up':(c<-0.2?'dn':'flat');}
+function chgText(c){const s=c>0?'+':'';return s+(c.toFixed(1).replace('.0',''))+'%';}
+
+function render(filter){
+  currentFilter=filter;
+  const list=document.getElementById('list');
+  list.innerHTML='';
+  const data=filter==='all'?coins
+    :filter==='holdings'?coins.filter(c=>OWNED.has(c.t))
+    :filter==='watch'?coins.filter(c=>c.nar==='watch'||c.nar==='gaming')
+    :coins.filter(c=>c.nar===filter);
+  // Sync holdings tab count
+  const ht=document.getElementById('holdings-tab');
+  if(ht)ht.querySelector('.ct').textContent=OWNED.size;
+  data.forEach((c)=>{
+    const isOwned=OWNED.has(c.t);
+    const row=document.createElement('div');
+    row.className='row'+(isOwned?' owned':'');
+    row.innerHTML=
+      '<div class="av" style="position:relative;background:'+NAR_COLOR[c.nar]+'">'+c.t.slice(0,3)+(isOwned?'<span class="owndot">✓</span>':'')+"</div>"+
+      '<div class="rinfo"><div class="rname">'+c.n+' <span class="rtag '+c.tier+'">'+TIER_LABEL[c.tier]+'</span></div>'+
+      '<div class="rticker">'+c.t+'</div></div>'+
+      '<div class="rright"><div class="rprice">'+c.price+'</div>'+
+      '<div class="rchg '+chgClass(c.chg)+'">'+chgText(c.chg)+'</div></div>'+
+      '<div class="chev">▶</div>';
+    const det=document.createElement('div');
+    det.className='detail';
+    det.innerHTML=
+      '<div class="one">'+c.one+'</div>'+
+      '<div class="simple"><span class="sl">In plain English</span>'+(SIMPLE[c.t]||'')+'</div>'+
+      '<div class="dstats">'+
+        '<div class="s"><div class="l">Market cap</div><div class="v">'+c.mcap+'</div></div>'+
+        '<div class="s"><div class="l">Rank</div><div class="v">'+c.rank+'</div></div>'+
+        '<div class="s"><div class="l">From ATH</div><div class="v '+(c.ath.indexOf('−')>=0?'dn':'')+'">'+c.ath+'</div></div>'+
+        '<div class="s"><div class="l">Founded</div><div class="v">'+c.founded+'</div></div>'+
+      '</div>'+
+      '<div class="dsec"><div class="h">Founder / team</div><p>'+c.founder+'</p></div>'+
+      '<div class="dsec"><div class="h">Catalyst</div><p>'+c.cat+'</p></div>'+
+      '<div class="dsec"><div class="h">Tokenomics</div><p>'+c.tok+'</p></div>'+
+      '<div class="er"><div class="box edge"><div class="h">Edge</div><p>'+c.edge+'</p></div>'+
+      '<div class="box risk"><div class="h">Risk</div><p>'+c.risk+'</p></div></div>'+
+      '<div class="dsec"><div class="h">Where to buy</div><div class="buys">'+c.buys.map(function(b){return '<span class="ex">'+b+'</span>';}).join('')+'</div></div>'+
+      '<div class="ownrow"><button class="own-btn'+(isOwned?' active':'')+'" onclick="event.stopPropagation();toggleOwned(\''+c.t+'\')">'+
+      (isOwned?'✓ In my portfolio — tap to remove':'+ Add to my portfolio')+
+      '</button></div>';
+    row.addEventListener('click',function(){
+      var isOpen=row.classList.contains('open');
+      row.classList.toggle('open',!isOpen);
+      det.classList.toggle('open',!isOpen);
+    });
+    list.appendChild(row);
+    list.appendChild(det);
+  });
+}
+
+var tabs=document.querySelectorAll('.tab');
+tabs.forEach(function(t){t.addEventListener('click',function(){
+  tabs.forEach(function(x){x.classList.remove('active');});
+  t.classList.add('active');
+  var f=t.dataset.f;
+  if(f==='lens'){
+    document.getElementById('coinpanel').classList.remove('active');
+    document.getElementById('lenspanel').classList.add('active');
+  }else{
+    document.getElementById('lenspanel').classList.remove('active');
+    document.getElementById('coinpanel').classList.add('active');
+    render(f);
+  }
+});});
+
+render('all');
+
+// ── Live price system ─────────────────────────────────────────────────────────
+const CGID={
+  HYPE:'hyperliquid',
+  LINK:'chainlink',
+  CC:'canton-coin',
+  XRP:'ripple',
+  XLM:'stellar',
+  HBAR:'hedera-hashgraph',
+  XDC:'xdc-network',
+  ONDO:'ondo-finance',
+  ZBCN:'zebec-protocol',
+  INJ:'injective-protocol',
+  KAS:'kaspa',
+  AKT:'akash-network',
+  TAO:'bittensor',
+  FET:'fetch-ai',
+  IO:'io-net',
+  FLR:'flare-networks',
+  ZEC:'zcash',
+  GMT:'stepn',
+  ATLAS:'star-atlas',
+  AURY:'aurory',
+  // CHIP not on CoinGecko public API — kept manual
+};
+
+const CACHE_KEY='cg_v2';
+const CACHE_TTL=6*60*60*1000; // 6 hours
+
+function fmtP(usd){
+  if(!usd||usd<=0) return null;
+  if(usd>=10000) return '$'+(usd/1000).toFixed(1)+'K';
+  if(usd>=1000) return '$'+usd.toLocaleString('en-US',{maximumFractionDigits:0});
+  if(usd>=100) return '$'+usd.toFixed(2);
+  if(usd>=10) return '$'+usd.toFixed(2);
+  if(usd>=1) return '$'+usd.toFixed(3);
+  if(usd>=0.1) return '$'+usd.toFixed(4);
+  if(usd>=0.01) return '$'+usd.toFixed(5);
+  return '$'+usd.toFixed(6);
+}
+function fmtMC(mc){
+  if(!mc) return null;
+  if(mc>=1e12) return '$'+(mc/1e12).toFixed(2)+'T';
+  if(mc>=1e9) return '$'+(mc/1e9).toFixed(1)+'B';
+  if(mc>=1e6) return '$'+(mc/1e6).toFixed(0)+'M';
+  return null;
+}
+function fmtAgo(ts){
+  const s=Math.floor((Date.now()-ts)/1000);
+  if(s<60) return 'just now';
+  const m=Math.floor(s/60);
+  if(m<60) return m+'m ago';
+  return Math.floor(m/60)+'h ago';
+}
+function setStatus(txt,color){
+  const el=document.getElementById('liveStatus');
+  if(el){el.textContent=txt;el.style.color=color||'#3b82f6';}
+}
+
+function applyPrices(cgData){
+  let updated=0;
+  coins.forEach(c=>{
+    const id=CGID[c.t];
+    if(!id||!cgData[id]) return;
+    const d=cgData[id];
+    const p=fmtP(d.usd);
+    if(p) c.price=p;
+    if(typeof d.usd_24h_change==='number') c.chg=parseFloat(d.usd_24h_change.toFixed(1));
+    const mc=fmtMC(d.usd_market_cap);
+    if(mc) c.mcap=mc;
+    updated++;
+  });
+  // Update BTC header cell
+  const btc=cgData['bitcoin']||cgData['hyperliquid'];
+  const btcEl=document.getElementById('btcCell');
+  if(cgData['bitcoin']&&btcEl){
+    const bp=cgData['bitcoin'].usd;
+    btcEl.textContent='$'+bp.toLocaleString('en-US',{maximumFractionDigits:0});
+    btcEl.className='v'+(cgData['bitcoin'].usd_24h_change>0?' up':cgData['bitcoin'].usd_24h_change<0?' dn':'');
+  }
+  return updated;
+}
+
+async function fetchCG(){
+  const ids=Object.values(CGID).filter(Boolean).join(',')+'bitcoin';
+  const url=`https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(ids)}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true`;
+  const r=await fetch(url,{headers:{'Cache-Control':'no-cache'}});
+  if(!r.ok) throw new Error('CG '+r.status);
+  return r.json();
+}
+
+async function refreshPrices(force){
+  const btn=document.getElementById('refreshBtn');
+  // Try cache first (unless forced)
+  if(!force){
+    try{
+      const c=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');
+      if(c&&Date.now()-c.ts<CACHE_TTL){
+        const n=applyPrices(c.data);
+        render(currentFilter);
+        setStatus('● Live · updated '+fmtAgo(c.ts),'#22c55e');
+        return;
+      }
+    }catch(e){}
+  }
+  // Fetch fresh
+  setStatus('↻ Fetching live prices…','#3b82f6');
+  if(btn) btn.textContent='…';
+  try{
+    const data=await fetchCG();
+    localStorage.setItem(CACHE_KEY,JSON.stringify({data,ts:Date.now()}));
+    applyPrices(data);
+    render(currentFilter);
+    setStatus('● Live · just updated','#22c55e');
+  }catch(e){
+    // Show cached if any
+    try{
+      const c=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');
+      if(c){applyPrices(c.data);render(currentFilter);setStatus('⚠ Offline · '+fmtAgo(c.ts),'#f59e0b');}
+      else setStatus('⚠ Price fetch failed','#ef4444');
+    }catch(e2){setStatus('⚠ Price fetch failed','#ef4444');}
+  }
+  if(btn) btn.textContent='↻ Live';
+}
+
+function doRefresh(){refreshPrices(true);}
+
+// Auto-refresh on load
+window.addEventListener('load',()=>{
+  refreshPrices(false);
+  // Re-fetch every 30 min while open
+  setInterval(()=>refreshPrices(true),30*60*1000);
+  // Update "X ago" label every minute
+  setInterval(()=>{
+    try{
+      const c=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');
+      if(c) setStatus('● Live · updated '+fmtAgo(c.ts),'#22c55e');
+    }catch(e){}
+  },60000);
+});
+
+</script>
+</body>
+</html>
